@@ -10,9 +10,11 @@ import spray.json
 import spray.http.HttpRequest
 import spray.httpx.SprayJsonSupport._
 
-object ApiJsonProtocol extends DefaultJsonProtocol {
+object ChuckNorrisDbJsonProtocol extends DefaultJsonProtocol {
   implicit object JokeJsonFormat extends RootJsonFormat[Joke] {
-    def write(c: Joke) = ???
+    def write(joke: Joke) = {
+      JsObject(("text", JsString(joke.text)))
+    }
 
     def read(value: JsValue) = value match {
       case json: JsObject =>  {
@@ -24,24 +26,21 @@ object ApiJsonProtocol extends DefaultJsonProtocol {
   }
 }
 
-object TeamCityApiApp extends App {
-  println((new Object with TeamCityApi).getRandomJoke)
-}
-
-trait TeamCityApi extends Api {
-
-  import ApiJsonProtocol._
+trait ChuckNorrisJokeDb extends JokeApi {
 
   implicit val timeout = Timeout(5, TimeUnit.SECONDS)
-  implicit val system = ActorSystem()
+  implicit val system: ActorSystem
+
   import system.dispatcher // execution context for futures
+  import ChuckNorrisDbJsonProtocol.JokeJsonFormat
+
+  def request: HttpRequest => Future[Joke] = sendReceive ~> unmarshal[Joke]
 
   override def getRandomJoke: Joke = {
-    val pipeline: HttpRequest => Future[Joke] = sendReceive ~> unmarshal[Joke]
-    Await.result(pipeline(Get("http://api.icndb.com/jokes/random")), timeout.duration)
+    Await.result(request(Get("http://api.icndb.com/jokes/random")), timeout.duration)
   }
 }
 
-trait Api {
+trait JokeApi {
   def getRandomJoke: Joke
 }
