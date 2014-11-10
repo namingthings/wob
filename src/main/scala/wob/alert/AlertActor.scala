@@ -1,4 +1,4 @@
-package wob
+package wob.alert
 
 import akka.actor.Actor
 

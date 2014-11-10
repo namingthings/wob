@@ -1,6 +1,6 @@
 package wob
 
-case class Joke(jokeType: String, text: String)
+case class Joke(id: String, joke: String)
 
 trait JokeApi {
   def getRandomJoke: Joke

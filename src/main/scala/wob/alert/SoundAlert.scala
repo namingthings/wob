@@ -1,7 +1,6 @@
-package wob
+package wob.alert
 
 import javazoom.jl.player.advanced.{AdvancedPlayer, PlaybackListener}
-import java.io.File
 
 class SoundAlert(val filePath: String) extends PlaybackListener {
 

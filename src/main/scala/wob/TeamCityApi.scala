@@ -1,22 +1,56 @@
 package wob
 
-import akka.actor.ActorSystem
-import akka.util.Timeout
-import java.util.concurrent.TimeUnit
-import scala.concurrent.{Await, Future}
-import spray.client.pipelining._
-import spray.http.HttpRequest
-import TeamCityApiJsonProtocol._
-import spray.httpx.SprayJsonSupport._
+import com.google.gson.internal.bind.DateTypeAdapter
+import com.google.gson.GsonBuilder
+import org.apache.commons.codec.binary.{StringUtils, Base64}
+import retrofit.RequestInterceptor.RequestFacade
+import retrofit.converter.GsonConverter
+import retrofit.{RequestInterceptor, RestAdapter}
+import retrofit.http.{Path, Headers, GET}
 
-class TeamCityApi(host: String = "teamcity.jetbrains.com", implicit val system: ActorSystem) extends BuildServerApi {
-  implicit val timeout = Timeout(5, TimeUnit.SECONDS)
-  import system.dispatcher
+case class BuildResults(count: Int, build: Array[BuildResult]) {
+  def builds = build.toList
+}
 
-  def request: HttpRequest => Future[BuildStep] = sendReceive ~> unmarshal[BuildStep]
+case class BuildResult(id: String, number: Int, status: String, buildTypeId: String, startDate: String, href: String, webUrl: String)
 
-  def getBuildSteps(projectId: String): Seq[BuildStep] = {
+trait TeamCityApi {
+  @Headers(Array("Accept: application/json"))
+  @GET("/httpAuth/app/rest/buildTypes/{id}/builds/")
+  def getBuilds(@Path("id") buildType: String): BuildResults
+}
 
-    Seq(Await.result(request(Get(s"http://$host/httpAuth/app/rest/projects")), timeout.duration))
+class TeamCityClient(url: String, userName: String, password: String) extends TeamCityApi {
+  val gson = new GsonBuilder()
+    .registerTypeAdapter(classOf[java.util.Date], new DateTypeAdapter())
+    .create()
+
+  val restAdapter = new RestAdapter.Builder()
+    .setRequestInterceptor(authInterceptor)
+    .setConverter(new GsonConverter(gson))
+    .setEndpoint(url)
+    .build()
+
+  def authInterceptor = new RequestInterceptor() {
+    override def intercept(request: RequestFacade) = {
+      request.addHeader("Authorization", authorizationHeaderValue(userName, password))
+    }
+
+    def authorizationHeaderValue(userName: String, password: String) = {
+      val userColonPassword = base64(s"$userName:$password")
+      s"Basic $userColonPassword"
+    }
+
+    def base64(input: String) = {
+      Base64.encodeBase64String(StringUtils.getBytesUtf8(input))
+    }
   }
+
+  val teamCityApi: TeamCityApi = restAdapter.create(classOf[TeamCityApi])
+
+  override def getBuilds(buildType: String): BuildResults = teamCityApi.getBuilds(buildType)
+}
+
+object TeamCityTest extends App {
+  println(new TeamCityClient("https://teamcity.bis.epost-dev.de", "guest", "guest").getBuilds("bt131"))
 }
