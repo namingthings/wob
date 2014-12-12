@@ -1,0 +1,13 @@
+{
+    "teamCityUrl":  "https://teamcity.org",
+    "teamCityUser": "guest",
+    "teamCityPassword": "guest",
+    "jiraUrl": "https://tasktracker.clear-mail.de/tracker/rest",
+    "jiraUser": "jiraUser",
+    "jiraPassword": "jiraPassword",
+    "nagiosUrl": "http://nagios",
+    "nagiosUser": "info",
+    "nagiosPassword": "info",
+    "pageRotation": [],
+    "pageRotationInterval" : 30000
+}

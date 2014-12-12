@@ -1,0 +1,21 @@
+{"chains" : [
+    {
+        "name": "FOO",
+        "steps": [
+            {
+                "buildType": "buildTypeId1",
+                "description": "a foo step"
+            }
+        ],
+    },
+    {
+        "name": "BAR",
+        "steps": [
+            {
+                "buildType": "buildTypeId2",
+                "description": "a bar step"
+            }
+        ],
+    }
+]
+}
