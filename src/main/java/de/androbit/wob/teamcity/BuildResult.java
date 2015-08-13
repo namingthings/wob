@@ -4,7 +4,7 @@ public class BuildResult {
     String id;
     Boolean running = false;
     String percentageComplete;
-    Integer number;
+    String number;
     String status;
     String buildTypeId;
     String startDate;
@@ -24,7 +24,7 @@ public class BuildResult {
     }
 
     public Integer getNumber() {
-        return number;
+        return Integer.parseInt(number.split(" ")[0]);
     }
 
     public String getStatus() {
