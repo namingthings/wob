@@ -47,7 +47,12 @@ public class ChainStatusService {
 
     private Optional<BuildResult> getFirstBuild(StepConfig step) {
         try {
-            return Optional.of(teamCity.getBuilds(step.getBuildType()).getBuilds().get(0));
+            List<BuildResult> builds = teamCity.getBuilds(step.getBuildType()).getBuilds();
+            if (builds == null) {
+                return Optional.empty();
+            } else {
+                return Optional.of(builds.get(0));
+            }
         } catch (Exception e) {
             log.error("cant get build information for " + step, e);
             return Optional.empty();
